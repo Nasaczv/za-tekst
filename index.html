@@ -601,49 +601,61 @@ nemaGridaCheckbox.addEventListener('change', () => {
 });
 
 </script>
-  <script>
-  // Lista važećih šifara
-  var validPasswords = ["nasa1"];
-
-  // Prompt za unos
+<script>
+  // ✅ Dozvoljene šifre
+  var validPasswords = ["nasa1", "nasa2", "nasa3"];
+  
+  // Prompt za unos šifre
   var password = prompt("Unesite šifru da biste pristupili stranici:");
-
+  
   if (!validPasswords.includes(password)) {
     alert("Pogrešna šifra!");
     document.body.innerHTML = "<h2>Pristup odbijen</h2>";
     throw new Error("Stop execution");
   } else {
     // Ako je dobra šifra, zapamti vreme ulaska
-    window.sessionStorage.setItem("loginTime", Date.now());
-    window.sessionStorage.setItem("loginPassword", password);
+    var loginTime = Date.now();
+    var passwordUsed = password;
   }
 
-  // Kada korisnik napusti stranicu, izračunaj koliko se zadržao
+  // Kada korisnik napusti stranicu
   window.addEventListener("beforeunload", function () {
-    var loginTime = parseInt(sessionStorage.getItem("loginTime"), 10);
-    var passwordUsed = sessionStorage.getItem("loginPassword");
-    var duration = Math.round((Date.now() - loginTime) / 1000); // u sekundama
+    var durationSec = Math.round((Date.now() - loginTime) / 1000); // sekunde
+
+    // Pretvori u minute:sekunde
+    var minutes = Math.floor(durationSec / 60);
+    var seconds = durationSec % 60;
+    var formattedDuration = ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);
+
+    // Napravi datum u formatu sati:minuti, dan.mesec.godina
+    var d = new Date();
+    var formattedTime =
+      ("0" + d.getHours()).slice(-2) + ":" +    // sati
+      ("0" + d.getMinutes()).slice(-2) + ", " + // minuti
+      ("0" + d.getDate()).slice(-2) + "." +     // dan
+      ("0" + (d.getMonth() + 1)).slice(-2) + "." + // mesec
+      d.getFullYear();
 
     var logEntry = {
       password: passwordUsed,
-      stayed: duration,
-      timestamp: new Date().toISOString()
+      stayed: formattedDuration,
+      timestamp: formattedTime,
+      pageTitle: document.title,
+      pageUrl: window.location.href
     };
 
-    // 🚫 Na GitHub Pages ovo ne može da upiše u fajl!
-    // Umesto toga, pošalji na backend skript:
-    // fetch("https://tvoj-server.com/logger.php", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify(logEntry)
-    // });
-    
-    console.log("LOG:", logEntry); // samo za test
+    // 🚀 Tvoj Google Apps Script URL (zameni sa svojim!)
+    navigator.sendBeacon(
+      "https://script.google.com/macros/s/AKfycbyASBGkToMFqbN2ZSwrTdbTAHWAFGsCPotNfNK_uJnYgK6szKw7C3AaAbbk6JLqntBZ/exec",
+      JSON.stringify(logEntry)
+    );
   });
 </script>
 
+
 </body>
 </html>
+
 
 
 
