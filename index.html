@@ -1,0 +1,612 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+  <meta charset="UTF-8">
+  <title>Export PNG 960x1200</title>
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <meta name="viewport" content="width=710, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <style>
+    label { margin-bottom: 0; }
+    .capture-area img { width: 100%; }
+    .range-control { display: flex; flex-wrap: nowrap !important; }
+
+    @font-face {
+      font-family: 'MyriadProBoldCond';
+      src: url('MyriadPro-BoldCond.otf') format('opentype');
+    }
+
+    body { font-family: 'MyriadProBoldCond', sans-serif; padding: 10px; }
+
+    .preview-wrapper {
+      zoom: 37%;
+      margin-bottom: 20px;
+      border: 1px solid #ccc;
+      display: inline-block;
+    }
+
+    .capture-area {
+      position: relative;
+      width: 960px;
+      height: 1200px;
+      overflow: hidden;
+      background-color: rgb(201, 201, 201);
+    }
+
+    .bg-img {
+      position: absolute;
+      top: 0; left: 0;
+      transform-origin: top left;
+      user-select: none;
+      touch-action: none;
+      pointer-events: none;
+    }
+
+    .overlay-text {
+      position: absolute;
+      bottom: 79px;
+      font-size: 77px;
+      max-width: 73%;
+      left: 0; right: 0; margin: 0 auto;
+      text-align: center;
+      color: #a50000;
+      line-height: 1;
+      white-space: normal;
+      overflow-wrap: break-word;
+      z-index: 555;
+    }
+
+    .toolbar .color-btn{
+      width: 34px; height: 28px;
+      border: 1px solid #ccc; border-radius: 6px;
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 0; margin-right: 8px; cursor: pointer; background: #fff;
+    }
+    .toolbar .color-dot{ width: 18px; height: 18px; border-radius: 50%; background: currentColor; border: 1px solid rgba(0,0,0,.15); }
+    .toolbar .color-btn:focus{ outline: 2px solid #666; outline-offset: 2px; }
+
+    #export-area-wrapper { position: absolute; left: -9999px; top: -9999px; }
+
+    #html-input {
+      width: 100%;
+      min-height: 100px;
+      border: 1px solid #ccc;
+      padding: 8px;
+      font-size: 16px;
+    }
+
+    [contenteditable][data-placeholder]:empty:before {
+      content: attr(data-placeholder);
+      color: #999;
+      pointer-events: none;
+      display: block;
+    }
+
+    .toolbar { margin-bottom: 10px; flex-wrap: wrap; display: flex; }
+    .toolbar button { margin-right: 8px; font-size: 14px; padding: 4px 8px; cursor: pointer; }
+
+    .range-control {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 15px; flex-wrap: wrap;
+    }
+    .range-control input[type="range"] { flex: 1; }
+    .range-control input[type="number"] { width: 60px; }
+
+    button { font-size: 16px; }
+
+    .capture-area:after {
+      content: '';
+      background-image: url(html-css-25.png);
+      width: 100%; height: 100%; display: block; background-position: center;
+      user-select: none; touch-action: none; pointer-events: none;
+      z-index: 55; position: absolute; left: 0; top: 0;
+    }
+
+    .giga-wrapper { display: flex; min-width: 700px; gap: 20px; }
+    body > div > div:nth-child(1) > label { display: block; }
+
+#html-input [style*="font-size"] { font-size: inherit !important; }
+#html-input [style*="line-height"] { line-height: inherit !important; }
+  /* Grid linija po difoltu uključena */
+  #preview-area.grid-enabled::before {
+    width: 1px;
+    position: absolute;
+    height: 100%;
+    display: block;
+    right: 0;
+    left: 50%;
+    content: '';
+    background: #000;
+    z-index: 45444;
+    top: 0px;
+    transform: translateX(-50%);
+  }
+  </style>
+</head>
+<body>
+  <div class="giga-wrapper">
+    <div>
+      <!-- PREVIEW -->
+      <div class="preview-wrapper">
+        <div id="preview-area" class="capture-area">
+          <img id="preview-bg" class="bg-img" src="/uploads/2025/07/ТЕКСТ-4-5-1.png" alt="BG" draggable="false">
+          <div id="preview-text" class="overlay-text"></div>
+        </div>
+      </div>
+
+      <!-- EXPORT (skriven) -->
+      <div id="export-area-wrapper">
+        <div id="export-area" class="capture-area">
+          <img id="export-bg" class="bg-img" src="/uploads/2025/07/ТЕКСТ-4-5-1.png" alt="BG" draggable="false">
+          <div id="export-text" class="overlay-text"></div>
+        </div>
+      </div>
+
+      <label>📸 Odaberi pozadinsku sliku:
+        <input type="file" id="bg-upload" accept="image/*">
+      </label>
+      <br><br>
+    </div>
+
+    <div>
+      <!-- TOOLBAR -->
+      <div class="toolbar">
+        <button onclick="execCmd('bold')"><b>Bold</b></button>
+        <button onclick="execCmd('italic')"><i>Italic</i></button>
+        <button onclick="execCmd('justifyLeft')">Levo</button>
+        <button onclick="execCmd('justifyCenter')">Centar</button>
+        <button onclick="execCmd('justifyRight')">Desno</button>
+        <button onclick="execCmd('insertLineBreak')">↩ Novi red</button>
+      </div>
+
+      <!-- HTML EDITOR -->
+      <label>📝 Unesi HTML tekst:</label><br>
+      <div id="html-input" contenteditable="true" data-placeholder="МАРКУС ВИЛИЈАМС ЈЕ<br>НОВО ПОЈАЧАЊЕ<br>ЗВЕЗДЕ!"></div>
+      <br>
+      <div class="toolbar">
+        <button type="button" class="apply-color color-btn" data-color="#333" style="color:#333" aria-label="Boja #333">
+          <span class="color-dot" aria-hidden="true"></span>
+        </button>
+        <button type="button" class="apply-color color-btn" data-color="#a50000" style="color:#a50000" aria-label="Boja #a50000">
+          <span class="color-dot" aria-hidden="true"></span>
+        </button>
+        </div>
+      <br>
+    
+      <!-- RANGE KONTROLE (GLOBALNO) -->
+      <div class="range-control">
+        <label>🔠 Font size:</label>
+        <input type="range" id="font-size-range" min="10" max="200" value="77">
+        <input type="number" id="font-size-input" min="10" max="200" value="77">
+      </div>
+
+      <div class="range-control">
+        <label>📏 Line height:</label>
+        <input type="range" id="line-height-range" min="0.50" max="1.50" step="0.01" value="1.00">
+        <input type="number" id="line-height-input" min="0.50" max="1.50" step="0.01" value="1.00">
+      </div>
+
+      <div class="range-control">
+        <label>📐 Maks širina (%):</label>
+        <input type="range" id="max-width-range" min="20" max="100" value="73">
+        <input type="number" id="max-width-input" min="20" max="100" value="73">
+      </div>
+
+      <div class="range-control">
+        <label>⬇️ Udaljenost od dna (px):</label>
+        <input type="range" id="bottom-range" min="0" max="400" value="79">
+        <input type="number" id="bottom-input" min="0" max="400" value="79">
+      </div>
+
+      <!-- RANGE KONTROLE (SAMO SELEKTOVANO) -->
+      <div class="range-control">
+        <label>🔤 Selected font size (px):</label>
+        <input type="range" id="sel-font-size-range" min="10" max="200" value="77">
+        <input type="number" id="sel-font-size-input" min="10" max="200" value="77">
+      </div>
+
+      <div class="range-control">
+        <label>📐 Selected line height:</label>
+        <input type="range" id="sel-line-height-range" min="0.50" max="2.00" step="0.01" value="1.00">
+        <input type="number" id="sel-line-height-input" min="0.50" max="2.00" step="0.01" value="1.00">
+      </div>
+<!-- CHECKBOX -->
+<div class="range-control">
+  <label>
+    <input type="checkbox" id="nema-grida">
+    ✅ Ima grida
+  </label>
+</div>
+            <div class="range-control">
+  <label>
+    <input type="checkbox" id="nagradna-igra">
+    🎁 Dodaj "НАГРАДНА ИГРА" na vrh
+  </label>
+</div>
+      <br>
+
+      <button id="generate">🎨 Generate PNG</button>
+      <a id="download-link" style="display: none;" download="output.png">⬇️ Preuzmi sliku</a>
+    </div>
+  </div>
+
+  <script>
+    const previewBg = document.getElementById('preview-bg');
+    const exportBg  = document.getElementById('export-bg');
+    let scale = 1;
+    let pos = { x: 0, y: 0 };
+    let isDragging = false;
+    let lastTouches = [];
+    let dragStart = { x: 0, y: 0 };
+
+    function updateTransform() {
+      const transform = `translate(${pos.x}px, ${pos.y}px) scale(${scale})`;
+      previewBg.style.transform = transform;
+      exportBg.style.transform  = transform;
+    }
+
+    // Drag & Zoom logika (desktop + touch)
+    const area = document.getElementById('preview-area');
+    document.getElementById('preview-area').addEventListener('mousedown', e => {
+      isDragging = true;
+      dragStart = { x: e.clientX - pos.x, y: e.clientY - pos.y };
+    });
+    window.addEventListener('mousemove', e => {
+      if (!isDragging) return;
+      pos.x = e.clientX - dragStart.x;
+      pos.y = e.clientY - dragStart.y;
+      updateTransform();
+    });
+    window.addEventListener('mouseup', () => isDragging = false);
+    document.getElementById('preview-area').addEventListener('wheel', e => {
+      e.preventDefault();
+      scale += e.deltaY > 0 ? -0.05 : 0.05;
+      scale = Math.min(Math.max(0.2, scale), 5);
+      updateTransform();
+    });
+    area.addEventListener('touchstart', e => {
+      lastTouches = [...e.touches];
+      if (e.touches.length === 1) {
+        isDragging = true;
+        dragStart = { x: e.touches[0].clientX - pos.x, y: e.touches[0].clientY - pos.y };
+      }
+    });
+    area.addEventListener('touchmove', e => {
+      e.preventDefault();
+      if (e.touches.length === 1 && isDragging) {
+        pos.x = e.touches[0].clientX - dragStart.x;
+        pos.y = e.touches[0].clientY - dragStart.y;
+      } else if (e.touches.length === 2) {
+        const dist = (t) => Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+        const oldDist = dist(lastTouches);
+        const newDist = dist(e.touches);
+        if (oldDist > 0) {
+          scale *= newDist / oldDist;
+          scale = Math.min(Math.max(0.2, scale), 5);
+        }
+        lastTouches = [...e.touches];
+      }
+      updateTransform();
+    }, { passive: false });
+    area.addEventListener('touchend', () => { isDragging = false; lastTouches = []; });
+
+    // Upload pozadine
+    document.getElementById('bg-upload').addEventListener('change', function (event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function (e) {
+        previewBg.src = e.target.result;
+        exportBg.src  = e.target.result;
+        scale = 1; pos = { x: 0, y: 0 };
+        updateTransform();
+      };
+      reader.readAsDataURL(file);
+    });
+
+    function execCmd(command, value = null) {
+      if (command === 'insertLineBreak') {
+        document.execCommand('insertHTML', false, '<br>');
+      } else {
+        document.execCommand(command, false, value);
+      }
+      syncHTML();
+    }
+
+    function syncHTML() {
+      const html = document.getElementById('html-input').innerHTML;
+      document.getElementById('preview-text').innerHTML = html;
+      document.getElementById('export-text').innerHTML  = html;
+    }
+
+    function syncDualInputs(rangeEl, numberEl, callback) {
+      rangeEl.addEventListener('input', () => { numberEl.value = rangeEl.value; callback(rangeEl.value); });
+      numberEl.addEventListener('input', () => { rangeEl.value = numberEl.value; callback(numberEl.value); });
+    }
+
+    // GLOBALNE KONTROLE
+    syncDualInputs(document.getElementById('font-size-range'), document.getElementById('font-size-input'),
+      v => { document.getElementById('preview-text').style.fontSize = v + 'px'; document.getElementById('export-text').style.fontSize = v + 'px'; });
+
+    syncDualInputs(document.getElementById('line-height-range'), document.getElementById('line-height-input'),
+      v => { document.getElementById('preview-text').style.lineHeight = v; document.getElementById('export-text').style.lineHeight = v; });
+
+    syncDualInputs(document.getElementById('max-width-range'), document.getElementById('max-width-input'),
+      v => { document.getElementById('preview-text').style.maxWidth = v + '%'; document.getElementById('export-text').style.maxWidth = v + '%'; });
+
+    syncDualInputs(document.getElementById('bottom-range'), document.getElementById('bottom-input'),
+      v => { document.getElementById('preview-text').style.bottom = v + 'px'; document.getElementById('export-text').style.bottom = v + 'px'; });
+
+    document.getElementById('generate').addEventListener('click', function () {
+      syncHTML();
+      document.fonts.ready.then(() => {
+        html2canvas(document.getElementById('export-area'), {
+          scale: 1, useCORS: true, backgroundColor: null
+        }).then(canvas => {
+          const link = document.getElementById('download-link');
+          link.href = canvas.toDataURL('image/png');
+          link.style.display = 'inline';
+          link.click();
+        });
+      });
+    });
+
+    // ===== Boje (dozvoljene) =====
+    const ALLOWED_HEX = ['#333333', '#a50000'];
+    const DEFAULT_HEX = '#333333';
+    const htmlInput = document.getElementById('html-input');
+
+    function toHex6(color) {
+      if (!color) return '';
+      color = color.trim().toLowerCase();
+      if (color.startsWith('#')) {
+        if (color.length === 4) return `#${color[1]}${color[1]}${color[2]}${color[2]}${color[3]}${color[3]}`;
+        if (color.length === 7) return color;
+      }
+      const m = color.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+      if (m) {
+        return `#${(+m[1]).toString(16).padStart(2, '0')}${(+m[2]).toString(16).padStart(2, '0')}${(+m[3]).toString(16).padStart(2, '0')}`;
+      }
+      const tmp = document.createElement('span');
+      tmp.style.color = color;
+      document.body.appendChild(tmp);
+      const cs = getComputedStyle(tmp).color;
+      document.body.removeChild(tmp);
+      return toHex6(cs);
+    }
+
+    function applyColor(color) {
+      const wanted = toHex6(color);
+      if (!ALLOWED_HEX.includes(wanted)) return;
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return;
+      const range = sel.getRangeAt(0);
+      if (range.collapsed) return;
+      try {
+        document.execCommand('styleWithCSS', false, true);
+        const ok = document.execCommand('foreColor', false, wanted);
+        if (ok) { syncHTML(); return; }
+      } catch (e) {}
+      const span = document.createElement('span');
+      span.style.color = wanted;
+      try {
+        const frag = range.extractContents();
+        span.appendChild(frag);
+        range.insertNode(span);
+        sel.removeAllRanges();
+        const newRange = document.createRange();
+        newRange.selectNodeContents(span);
+        sel.addRange(newRange);
+      } catch (e) {
+        document.execCommand('insertHTML', false, `<span style="color:${wanted}">${sel.toString()}</span>`);
+      }
+      syncHTML();
+    }
+
+    document.querySelectorAll('.apply-color').forEach(btn => {
+      btn.addEventListener('click', () => applyColor(btn.dataset.color));
+    });
+
+    function sanitizeColors(root) {
+      root.querySelectorAll('[style]').forEach(el => {
+        const hex = toHex6(el.style.color || '');
+        if (!ALLOWED_HEX.includes(hex)) el.style.color = DEFAULT_HEX; else el.style.color = hex;
+        if (el.getAttribute('style') && el.getAttribute('style').trim() === '') el.removeAttribute('style');
+      });
+      root.querySelectorAll('font[color]').forEach(el => {
+        const hex = toHex6(el.getAttribute('color'));
+        const span = document.createElement('span');
+        span.style.color = ALLOWED_HEX.includes(hex) ? hex : DEFAULT_HEX;
+        span.innerHTML = el.innerHTML;
+        el.replaceWith(span);
+      });
+    }
+
+    htmlInput.addEventListener('paste', (e) => {
+      e.preventDefault();
+      const cd = e.clipboardData || window.clipboardData;
+      const html = cd.getData('text/html') || cd.getData('text/plain');
+      const temp = document.createElement('div');
+      temp.innerHTML = html;
+      sanitizeColors(temp);
+      document.execCommand('insertHTML', false, temp.innerHTML || cd.getData('text/plain'));
+      syncHTML();
+    });
+
+    htmlInput.addEventListener('input', () => {
+      sanitizeColors(htmlInput);
+      syncHTML();
+    });
+
+    // ========= SELECTED-ONLY: radi kao global slideri, ali na obeleženom tekstu =========
+    let activeSelSpan = null; // poslednji "obavijeni" span koji editujemo
+
+    // Pomoćne:
+    function isInsideEditor(node) {
+      return document.getElementById('html-input').contains(node);
+    }
+
+    function getClosestActiveSpan(node) {
+      while (node && node !== document) {
+        if (node.nodeType === 1 && node.hasAttribute && node.hasAttribute('data-sel-id')) return node;
+        node = node.parentNode;
+      }
+      return null;
+    }
+
+    function wrapCurrentSelectionIfNeeded() {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0) return null;
+      const range = sel.getRangeAt(0);
+      if (!isInsideEditor(range.commonAncestorContainer) || range.collapsed) return null;
+
+      // Ako je selekcija već unutar aktivnog spana — koristi njega
+      const existing = getClosestActiveSpan(range.commonAncestorContainer);
+      if (existing) {
+        activeSelSpan = existing;
+        return activeSelSpan;
+      }
+
+      // Inače, obavij tekst
+      const span = document.createElement('span');
+      span.setAttribute('data-sel-id', String(Date.now()) + Math.random().toString(16).slice(2));
+      try {
+        range.surroundContents(span);
+      } catch (e) {
+        const frag = range.extractContents();
+        span.appendChild(frag);
+        range.insertNode(span);
+      }
+
+      // fokus + selekcija na novi span (nije obavezno, ali pomaže UX-u)
+      sel.removeAllRanges();
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      sel.addRange(newRange);
+
+      activeSelSpan = span;
+      syncHTML();
+      return activeSelSpan;
+    }
+
+    function ensureActiveSpan() {
+      // Ako korisnik je pomerio kursor u drugi već obeležen deo
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount) {
+        const candidate = getClosestActiveSpan(sel.getRangeAt(0).commonAncestorContainer);
+        if (candidate) activeSelSpan = candidate;
+      }
+      // Ako aktivni span više ne postoji u DOM-u, poništi ga
+      if (activeSelSpan && !document.getElementById('html-input').contains(activeSelSpan)) {
+        activeSelSpan = null;
+      }
+      return activeSelSpan;
+    }
+
+    // Kada klikneš unutar editora — ako si u “data-sel-id” spanu, postaje aktivan
+    htmlInput.addEventListener('mouseup', () => ensureActiveSpan());
+    htmlInput.addEventListener('keyup',   () => ensureActiveSpan());
+    htmlInput.addEventListener('click',   () => ensureActiveSpan());
+
+    // BIND za “Selected font size”
+    (function(){
+      const r = document.getElementById('sel-font-size-range');
+      const n = document.getElementById('sel-font-size-input');
+      function setVal(v) { r.value = v; n.value = v; }
+      function apply(v) {
+        // Ako postoji selekcija — obavij; ako ne, radi na poslednjem aktivnom
+        const span = wrapCurrentSelectionIfNeeded() || ensureActiveSpan();
+        if (!span) return; // nema selekcije i nije bilo aktivnog spana
+        span.style.fontSize = `${parseFloat(v)}px`;
+        syncHTML();
+      }
+      r.addEventListener('input', () => { setVal(r.value); apply(r.value); });
+      n.addEventListener('input', () => { setVal(n.value); apply(n.value); });
+    })();
+
+    // BIND za “Selected line height”
+    (function(){
+      const r = document.getElementById('sel-line-height-range');
+      const n = document.getElementById('sel-line-height-input');
+      function setVal(v) { r.value = v; n.value = v; }
+      function apply(v) {
+        const span = wrapCurrentSelectionIfNeeded() || ensureActiveSpan();
+        if (!span) return;
+        span.style.lineHeight = `${parseFloat(v)}`;
+        syncHTML();
+      }
+      r.addEventListener('input', () => { setVal(r.value); apply(r.value); });
+      n.addEventListener('input', () => { setVal(n.value); apply(n.value); });
+    })();
+
+    // inicijalni transform
+    updateTransform();
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      let metaTag = document.querySelector('meta[name="viewport"]');
+      if (metaTag) {
+        metaTag.setAttribute('content', 'width=720');
+      } else {
+        metaTag = document.createElement('meta');
+        metaTag.name = "viewport";
+        metaTag.content = "width=720";
+        document.head.appendChild(metaTag);
+      }
+    });
+  </script>
+
+<script>
+  const nagradaCheckbox = document.getElementById('nagradna-igra');
+  const editor = document.getElementById('html-input');
+
+  nagradaCheckbox.addEventListener('change', () => {
+    if (nagradaCheckbox.checked) {
+      // Dodaj samo ako već nije ubačeno
+      if (!editor.querySelector('[data-nagrada]')) {
+        const span = document.createElement('span');
+        span.setAttribute('data-nagrada', 'true');
+        span.style.fontSize = '105px';
+        span.textContent = '- НАГРАДНА ИГРА -';
+        editor.insertBefore(span, editor.firstChild);
+        editor.insertBefore(document.createElement('br'), span.nextSibling);
+        syncHTML();
+      }
+    } else {
+      // Ukloni ako postoji
+      const span = editor.querySelector('[data-nagrada]');
+      if (span) {
+        // ukloni i eventualni <br> odmah posle
+        if (span.nextSibling && span.nextSibling.tagName === 'BR') {
+          span.nextSibling.remove();
+        }
+        span.remove();
+        syncHTML();
+      }
+    }
+  });
+</script>
+  <script>
+const previewArea = document.getElementById('preview-area');
+const nemaGridaCheckbox = document.getElementById('nema-grida');
+
+// Po difoltu grid je isključen (checkbox nije čekiran, nema klase)
+
+nemaGridaCheckbox.addEventListener('change', () => {
+  if (nemaGridaCheckbox.checked) {
+    previewArea.classList.add('grid-enabled');   // uključi liniju
+  } else {
+    previewArea.classList.remove('grid-enabled'); // isključi liniju
+  }
+});
+
+</script>
+</body>
+</html>
+
+
+
+
+
+
+

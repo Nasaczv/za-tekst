@@ -1,2 +1,1 @@
-# za-tekst
-za tekst
+# tekst
