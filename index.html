@@ -625,22 +625,20 @@ nemaGridaCheckbox.addEventListener('change', () => {
       password: enteredPassword,
       event: eventType, // "enter" ili "exit"
       stayed: duration,
-      timestamp: new Date().toLocaleString("sr-RS"), // format: minuti:sati, dan.mesec.godina
+      timestamp: new Date().toLocaleString("sr-RS"),
       pageTitle: document.title,
       pageUrl: window.location.href
     };
 
-    // koristi sendBeacon da se ne prekine request
-    navigator.sendBeacon(
-      "https://script.google.com/macros/s/AKfycbyASBGkToMFqbN2ZSwrTdbTAHWAFGsCPotNfNK_uJnYgK6szKw7C3AaAbbk6JLqntBZ/exec", // ovde stavi svoj /exec link
-      new Blob([JSON.stringify(data)], { type: "application/json" })
-    );
+    // koristi sendBeacon sa text/plain (najpouzdanije za GAS)
+    const blob = new Blob([JSON.stringify(data)], { type: "text/plain" });
+    navigator.sendBeacon("https://script.google.com/macros/s/AKfycbyASBGkToMFqbN2ZSwrTdbTAHWAFGsCPotNfNK_uJnYgK6szKw7C3AaAbbk6JLqntBZ/exec", blob);
   }
 
   // 1) Loguj odmah kada uđe
   sendLog("enter");
 
-  // 2) Loguj kada izlazi (sa vremenom zadržavanja)
+  // 2) Loguj kada izlazi
   window.addEventListener("pagehide", function () {
     const durationSec = Math.round((Date.now() - startTime) / 1000);
     sendLog("exit", durationSec + "s");
@@ -651,8 +649,10 @@ nemaGridaCheckbox.addEventListener('change', () => {
 
 
 
+
 </body>
 </html>
+
 
 
 
