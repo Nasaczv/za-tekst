@@ -602,66 +602,58 @@ nemaGridaCheckbox.addEventListener('change', () => {
 
 </script>
 <script>
-  // ✅ Dozvoljene šifre
-  var validPasswords = ["nasa1", "nasa2", "nasa3"];
+  // Dozvoljene šifre
+  const validPasswords = ["nasa1", "nasa2", "nasa3"];
+  let enteredPassword = null;
+  let startTime = null;
 
-  // Prompt za unos šifre
-  var password = prompt("Unesite šifru da biste pristupili stranici:");
+  // Prompt za šifru
+  enteredPassword = prompt("Unesite šifru da biste pristupili stranici:");
 
-  if (!validPasswords.includes(password)) {
+  if (!validPasswords.includes(enteredPassword)) {
     alert("Pogrešna šifra!");
     document.body.innerHTML = "<h2>Pristup odbijen</h2>";
     throw new Error("Stop execution");
-  } else {
-    // Ako je dobra šifra, zapamti vreme ulaska
-    var loginTime = Date.now();
-    var passwordUsed = password;
   }
 
-  // Kada korisnik napusti stranicu
-  window.addEventListener("beforeunload", function () {
-    var durationSec = Math.round((Date.now() - loginTime) / 1000); // sekunde
+  // Ako je šifra tačna, pamti vreme ulaska
+  startTime = Date.now();
 
-    // Pretvori u minute:sekunde
-    var minutes = Math.floor(durationSec / 60);
-    var seconds = durationSec % 60;
-    var formattedDuration =
-      ("0" + minutes).slice(-2) + ":" + ("0" + seconds).slice(-2);
-
-    // Napravi datum u formatu sati:minuti, dan.mesec.godina
-    var d = new Date();
-    var formattedTime =
-      ("0" + d.getHours()).slice(-2) + ":" +
-      ("0" + d.getMinutes()).slice(-2) + ", " +
-      ("0" + d.getDate()).slice(-2) + "." +
-      ("0" + (d.getMonth() + 1)).slice(-2) + "." +
-      d.getFullYear();
-
-    var logEntry = {
-      password: passwordUsed,
-      stayed: formattedDuration,
-      timestamp: formattedTime,
+  // Funkcija za slanje podataka ka Google Apps Script-u
+  function sendLog(eventType, duration = null) {
+    const data = {
+      password: enteredPassword,
+      event: eventType, // "enter" ili "exit"
+      stayed: duration,
+      timestamp: new Date().toLocaleString("sr-RS"), // format: minuti:sati, dan.mesec.godina
       pageTitle: document.title,
       pageUrl: window.location.href
     };
 
-    // 🚀 Pošalji log na Google Apps Script Web App
-    fetch("https://script.google.com/macros/s/AKfycbyASBGkToMFqbN2ZSwrTdbTAHWAFGsCPotNfNK_uJnYgK6szKw7C3AaAbbk6JLqntBZ/exec", {
-      method: "POST",
-      mode: "no-cors",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(logEntry)
-    });
+    // koristi sendBeacon da se ne prekine request
+    navigator.sendBeacon(
+      "https://script.google.com/macros/s/AKfycbyASBGkToMFqbN2ZSwrTdbTAHWAFGsCPotNfNK_uJnYgK6szKw7C3AaAbbk6JLqntBZ/exec", // ovde stavi svoj /exec link
+      new Blob([JSON.stringify(data)], { type: "application/json" })
+    );
+  }
+
+  // 1) Loguj odmah kada uđe
+  sendLog("enter");
+
+  // 2) Loguj kada izlazi (sa vremenom zadržavanja)
+  window.addEventListener("pagehide", function () {
+    const durationSec = Math.round((Date.now() - startTime) / 1000);
+    sendLog("exit", durationSec + "s");
   });
 </script>
 
 
 
 
+
 </body>
 </html>
+
 
 
 
