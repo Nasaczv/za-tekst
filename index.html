@@ -9,23 +9,23 @@
     label { margin-bottom: 0; }
     .capture-area img { width: 100%; }
     .range-control { display: flex; flex-wrap: nowrap !important; }
- 
+
     @font-face {
       font-family: 'MyriadProBoldCond';
       src: url('MyriadPro-BoldCond.otf') format('opentype');
     }
- 
+
     html, body { height: 100%; }
- 
+
     body { font-family: 'MyriadProBoldCond', sans-serif; padding: 10px; }
- 
+
     .preview-wrapper {
       zoom: 37%;
       margin-bottom: 20px;
       border: 1px solid #ccc;
       display: inline-block;
     }
- 
+
     .capture-area {
       position: relative;
       width: 960px;
@@ -33,7 +33,7 @@
       overflow: hidden;
       background-color: rgb(201, 201, 201);
     }
- 
+
     .bg-img {
       position: absolute;
       top: 0; left: 0;
@@ -42,7 +42,7 @@
       touch-action: pan-x pan-y;
       pointer-events: none;
     }
- 
+
     .overlay-text {
       transform-origin: center bottom;
       position: absolute;
@@ -57,7 +57,7 @@
       overflow-wrap: break-word;
       z-index: 555;
     }
- 
+
     .toolbar .color-btn{
       width: 34px; height: 28px;
       border: 1px solid #ccc; border-radius: 6px;
@@ -66,9 +66,9 @@
     }
     .toolbar .color-dot{ width: 18px; height: 18px; border-radius: 50%; background: currentColor; border: 1px solid rgba(0,0,0,.15); }
     .toolbar .color-btn:focus{ outline: 2px solid #666; outline-offset: 2px; }
- 
+
     #export-area-wrapper { position: absolute; left: -9999px; top: -9999px; }
- 
+
     #html-input {
       width: 100%;
       min-height: 100px;
@@ -76,17 +76,17 @@
       padding: 8px;
       font-size: 16px;
     }
- 
+
     [contenteditable][data-placeholder]:empty:before {
       content: attr(data-placeholder);
       color: #999;
       pointer-events: none;
       display: block;
     }
- 
+
     .toolbar { margin-bottom: 10px; flex-wrap: wrap; display: flex; }
     .toolbar button { margin-right: 8px; font-size: 14px; padding: 4px 8px; cursor: pointer; }
- 
+
     .range-control {
       display: flex; align-items: center; gap: 10px;
       margin-bottom: 15px; flex-wrap: wrap;
@@ -131,7 +131,7 @@
       border: 2px solid #fff;
     }
     .range-control input[type="number"] { width: 60px; }
- 
+
     input[type="text"],
     input[type="number"],
     input[type="file"],
@@ -140,9 +140,9 @@
     [contenteditable] {
       font-size: 16px !important;
     }
- 
+
     button { font-size: 16px; }
- 
+
     .capture-area:after {
       content: '';
       background-image: url(html-css-25.png);
@@ -150,13 +150,13 @@
       user-select: none; touch-action: pan-x pan-y; pointer-events: none;
       z-index: 55; position: absolute; left: 0; top: 0;
     }
- 
+
     .giga-wrapper { display: flex; min-width: 700px; gap: 20px; }
     body > div > div:nth-child(1) > label { display: block; }
- 
+
     #html-input [style*="font-size"] { font-size: inherit !important; }
     #html-input [style*="line-height"] { line-height: inherit !important; }
- 
+
     #preview-area.grid-enabled::before {
       width: 1px;
       position: absolute;
@@ -176,7 +176,7 @@
       var isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       var meta = document.querySelector('meta[name="viewport"]');
       if (!meta) { meta = document.createElement('meta'); meta.name = 'viewport'; document.head.appendChild(meta); }
- 
+
       if (isIOS) {
         document.documentElement.style.overflow = 'hidden';
         document.documentElement.style.height = '100%';
@@ -227,7 +227,7 @@
       </label>
       <br><br>
     </div>
- 
+
     <div>
       <div class="toolbar">
         <button onclick="toggleUppercase()"><b>AA</b></button>
@@ -292,18 +292,18 @@
       <a id="download-link" style="display: none;" download="output.png">⬇️ Preuzmi sliku</a>
     </div>
   </div>
- 
+
   <script>
     const previewBg = document.getElementById('preview-bg');
     const exportBg  = document.getElementById('export-bg');
     let scale = 1, pos = { x: 0, y: 0 }, isDragging = false, lastTouches = [], dragStart = { x: 0, y: 0 };
- 
+
     function updateTransform() {
       const t = `translate(${pos.x}px, ${pos.y}px) scale(${scale})`;
       previewBg.style.transform = t;
       exportBg.style.transform  = t;
     }
- 
+
     const area = document.getElementById('preview-area');
     area.addEventListener('mousedown', e => { isDragging = true; dragStart = { x: e.clientX - pos.x, y: e.clientY - pos.y }; });
     window.addEventListener('mousemove', e => { if (!isDragging) return; pos.x = e.clientX - dragStart.x; pos.y = e.clientY - dragStart.y; updateTransform(); });
@@ -325,7 +325,7 @@
       updateTransform();
     }, { passive: false });
     area.addEventListener('touchend', () => { isDragging = false; lastTouches = []; });
- 
+
     document.getElementById('bg-upload').addEventListener('change', function (event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -333,24 +333,24 @@
       reader.onload = function (e) { previewBg.src = e.target.result; exportBg.src = e.target.result; scale = 1; pos = { x: 0, y: 0 }; updateTransform(); };
       reader.readAsDataURL(file);
     });
- 
+
     function execCmd(command, value = null) {
       if (command === 'insertLineBreak') document.execCommand('insertHTML', false, '<br>');
       else document.execCommand(command, false, value);
       syncHTML();
     }
- 
+
     function syncHTML() {
       const html = document.getElementById('html-input').innerHTML;
       document.getElementById('preview-text').innerHTML = html;
       document.getElementById('export-text').innerHTML  = html;
     }
- 
+
     function syncDualInputs(r, n, cb) {
       r.addEventListener('input', () => { n.value = r.value; cb(r.value); });
       n.addEventListener('input', () => { r.value = n.value; cb(n.value); });
     }
- 
+
     syncDualInputs(document.getElementById('font-size-range'), document.getElementById('font-size-input'),
       v => { document.getElementById('preview-text').style.fontSize = v + 'px'; document.getElementById('export-text').style.fontSize = v + 'px'; });
     syncDualInputs(document.getElementById('text-scale-range'), document.getElementById('text-scale-input'),
@@ -361,31 +361,31 @@
       v => { document.getElementById('preview-text').style.maxWidth = v + '%'; document.getElementById('export-text').style.maxWidth = v + '%'; });
     syncDualInputs(document.getElementById('bottom-range'), document.getElementById('bottom-input'),
       v => { document.getElementById('preview-text').style.bottom = v + 'px'; document.getElementById('export-text').style.bottom = v + 'px'; });
- 
+
     document.getElementById('generate').addEventListener('click', function () {
       syncHTML();
       document.fonts.ready.then(() => {
         html2canvas(document.getElementById('export-area'), { scale: 1, useCORS: true, backgroundColor: null }).then(canvas => {
           const dataUrl = canvas.toDataURL('image/png');
-          // 1. Odmah preuzmi
-          const link = document.createElement('a');
-          link.href = dataUrl; link.download = 'output.png';
-          document.body.appendChild(link); link.click(); document.body.removeChild(link);
-          // 2. Nakon 0.3s otvori u novom tabu
+          // 1. Odmah otvori u novom tabu
+          const newTab = window.open('', '_blank');
+          if (newTab) {
+            newTab.document.write(`<!DOCTYPE html><html><head><title>output.png</title><style>body{margin:0;background:#111;display:flex;justify-content:center;}img{max-width:100%;height:auto;display:block;}</style></head><body><img src="${dataUrl}"></body></html>`);
+            newTab.document.close();
+          }
+          // 2. Nakon 0.3s preuzmi
           setTimeout(() => {
-            const newTab = window.open('', '_blank');
-            if (newTab) {
-              newTab.document.write(`<!DOCTYPE html><html><head><title>output.png</title><style>body{margin:0;background:#111;display:flex;justify-content:center;}img{max-width:100%;height:auto;display:block;}</style></head><body><img src="${dataUrl}"></body></html>`);
-              newTab.document.close();
-            }
+            const link = document.createElement('a');
+            link.href = dataUrl; link.download = 'output.png';
+            document.body.appendChild(link); link.click(); document.body.removeChild(link);
           }, 300);
         });
       });
     });
- 
+
     const ALLOWED_HEX = ['#333333', '#a50000'], DEFAULT_HEX = '#333333';
     const htmlInput = document.getElementById('html-input');
- 
+
     function toHex6(color) {
       if (!color) return '';
       color = color.trim().toLowerCase();
@@ -395,7 +395,7 @@
       const tmp = document.createElement('span'); tmp.style.color = color; document.body.appendChild(tmp);
       const cs = getComputedStyle(tmp).color; document.body.removeChild(tmp); return toHex6(cs);
     }
- 
+
     function applyColor(color) {
       const wanted = toHex6(color); if (!ALLOWED_HEX.includes(wanted)) return;
       const sel = window.getSelection(); if (!sel || sel.rangeCount === 0) return;
@@ -406,9 +406,9 @@
       catch(e) { document.execCommand('insertHTML', false, `<span style="color:${wanted}">${sel.toString()}</span>`); }
       syncHTML();
     }
- 
+
     document.querySelectorAll('.apply-color').forEach(btn => btn.addEventListener('click', () => applyColor(btn.dataset.color)));
- 
+
     function sanitizeColors(root) {
       root.querySelectorAll('[style]').forEach(el => {
         const hex = toHex6(el.style.color || '');
@@ -420,7 +420,7 @@
         span.style.color = ALLOWED_HEX.includes(hex) ? hex : DEFAULT_HEX; span.innerHTML = el.innerHTML; el.replaceWith(span);
       });
     }
- 
+
     htmlInput.addEventListener('paste', (e) => {
       e.preventDefault(); const cd = e.clipboardData || window.clipboardData;
       const html = cd.getData('text/html') || cd.getData('text/plain');
@@ -428,7 +428,7 @@
       document.execCommand('insertHTML', false, temp.innerHTML || cd.getData('text/plain')); syncHTML();
     });
     htmlInput.addEventListener('input', () => { sanitizeColors(htmlInput); syncHTML(); });
- 
+
     let activeSelSpan = null;
     function isInsideEditor(node) { return document.getElementById('html-input').contains(node); }
     function getClosestActiveSpan(node) {
@@ -452,7 +452,7 @@
     htmlInput.addEventListener('mouseup', () => ensureActiveSpan());
     htmlInput.addEventListener('keyup',   () => ensureActiveSpan());
     htmlInput.addEventListener('click',   () => ensureActiveSpan());
- 
+
     (function(){
       const r = document.getElementById('sel-font-size-range'), n = document.getElementById('sel-font-size-input');
       function apply(v) { const span = wrapCurrentSelectionIfNeeded() || ensureActiveSpan(); if (!span) return; span.style.fontSize = `${parseFloat(v)}px`; syncHTML(); }
@@ -465,10 +465,10 @@
       r.addEventListener('input', () => { n.value = r.value; apply(r.value); });
       n.addEventListener('input', () => { r.value = n.value; apply(n.value); });
     })();
- 
+
     updateTransform();
   </script>
- 
+
   <script>
     let isUppercase = true;
     function toggleUppercase() {
@@ -488,7 +488,7 @@
       if (btn) { btn.style.background = '#a50000'; btn.style.color = '#fff'; }
     });
   </script>
- 
+
   <script>
     const nagradaCheckbox = document.getElementById('nagradna-igra');
     const editor = document.getElementById('html-input');
@@ -504,7 +504,7 @@
       }
     });
   </script>
- 
+
   <script>
     const previewArea = document.getElementById('preview-area');
     const nemaGridaCheckbox = document.getElementById('nema-grida');
@@ -513,7 +513,7 @@
       else previewArea.classList.remove('grid-enabled');
     });
   </script>
- 
+
   <script>
     const validPasswords = ["nasa1", "nasa2", "nasa3"];
     let enteredPassword = null, startTime = null;
@@ -535,6 +535,6 @@
       sendLog("exit", durationSec + "s");
     });
   </script>
- 
+
 </body>
 </html>
